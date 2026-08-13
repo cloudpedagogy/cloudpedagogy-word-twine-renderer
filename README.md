@@ -56,6 +56,19 @@ guide, including basic branching, Word styles, state, conditions,
 scoring, gates, calculations, outcomes, QA, and the recommended Twine
 workflow.
 
+## Live demo
+
+A live example of the generated standalone HTML scenario is available
+here:
+
+**[Open the live
+demo](http://cloudpedagogy-word-twine-renderer.s3-website.eu-west-2.amazonaws.com/)**
+
+The demo illustrates the learner-facing output produced directly from a
+Word-authored scenario.
+
+![Screenshot of the Word-to-Twine scenario output](img/screenshot.png)
+
 ## Example scenarios
 
 A repository can use a structure such as:
@@ -362,4 +375,5 @@ manually edited HTML.
 
 ## Licence
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE)
+for details.
