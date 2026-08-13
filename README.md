@@ -1,323 +1,366 @@
 # CloudPedagogy Word-to-Twine Renderer
 
-Convert structured Microsoft Word documents into Twine-compatible Twee files for branching scenarios, interactive narratives and decision-based learning activities.
+Convert structured Microsoft Word documents into interactive branching
+scenarios, simulations, and decision-based learning activities.
 
-The converter allows authors to design a scenario in a familiar Word document. Word headings define the story and its passages, while simple Twine link notation defines the choices between them.
+Authors work in Word. The converter reads Word headings, paragraph
+styles, and optional advanced directives, then generates both:
 
-## Live demo
+-   Twine-compatible Twee (`.twee`);
+-   standalone SugarCube HTML (`.html`) that can be opened directly in a
+    browser.
 
-[Open the live demonstration](http://cloudpedagogy-word-twine-renderer.s3-website.eu-west-2.amazonaws.com/Vaccine_Effectiveness_Slide_Test_slides.html#/title-slide)
+Twine is **optional**: it can be useful for visualising and inspecting
+the story map, but it is not required to generate the final HTML.
+
+## Why this approach?
+
+The project is designed around a simple source-of-truth model:
+
+``` text
+Word -> word_to_twine.py -> Twee + standalone HTML
+                              |
+                              +-> optional Twine visualisation / QA
+```
+
+Content and branching logic remain maintainable in Word rather than
+being locked into one-off HTML applications.
 
 ## Features
 
-- converts `.docx` files to Twee (`.twee`);
-- uses Word Heading styles to define the story structure;
-- supports branching choices and links between passages;
-- supports YouTube, Panopto, iframe and image embed markers;
-- processes a single document or multiple documents with a glob pattern;
-- checks links and reports references to missing passages;
-- creates output directories automatically;
-- supports optional protection against overwriting existing files.
+-   Word-based scenario authoring;
+-   Heading 1 for the scenario title;
+-   Heading 2 for passages/screens;
+-   Heading 3 for subheadings;
+-   normal Word paragraphs, bullets, and numbered lists;
+-   Word styles for single choices and multiple-selection choices;
+-   state variables and remembered decisions;
+-   time/resource costs;
+-   scoring;
+-   conditional content using `If / ElseIf / Else / EndIf`;
+-   readable `AND`, `OR`, and `NOT` conditions;
+-   feedback and debrief information;
+-   progression gates;
+-   tables and simple charts;
+-   calculations and score clamping;
+-   conditional outcomes;
+-   responsive standalone SugarCube HTML;
+-   Twee output for portability and optional Twine inspection;
+-   validation of passage/choice targets;
+-   backward compatibility with the earlier explicit directive syntax.
 
-## Project files
+## Authoring manual
 
-```text
+See **[AUTHORING.md](docs/AUTHORING.md)** for the complete authoring
+guide, including basic branching, Word styles, state, conditions,
+scoring, gates, calculations, outcomes, QA, and the recommended Twine
+workflow.
+
+## Example scenarios
+
+A repository can use a structure such as:
+
+``` text
 .
 ├── README.md
 ├── requirements.txt
 ├── word_to_twine.py
-├── literature_review_twine_demo.docx
+├── docs/
+│   └── AUTHORING.md
+├── input/
+│   └── demo_branching_scenario.docx
+├── examples/
+│   └── advanced/
+│       └── mtaa_saba_scenario.docx
 └── output/
-    └── twine/
 ```
+
+`demo_branching_scenario.docx` is intended as the beginner example. A
+more complex scenario such as Mtaa Saba can demonstrate advanced state,
+multi-select decisions, gating, calculations, scoring, and conditional
+outcomes.
 
 ## Requirements
 
-- Python 3.10 or later
-- [Mammoth](https://github.com/mwilliamson/python-mammoth)
+-   Python 3.10 or later;
+-   `python-docx`.
 
-The converter itself does not require Twine to generate a `.twee` file. To edit and publish the resulting story visually, use the free [Twine application](https://twinery.org/). Because Twine imports compiled story HTML rather than raw `.twee` source, use the free [Tweego compiler](https://www.motoslave.net/tweego/) to compile the generated file first.
+Install dependencies from the repository's `requirements.txt` where
+provided.
 
 ## Installation
 
-Open Terminal, move into the repository root, and create a virtual environment:
+From the repository root:
 
-```bash
-cd cloudpedagogy-word-twine-renderer
+``` bash
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
-If you downloaded the repository as a ZIP file, extract it first, open Terminal,
-and use `cd` to enter the extracted folder. For example:
+On Windows PowerShell:
 
-```bash
-cd ~/Downloads/cloudpedagogy-word-twine-renderer-main
-```
-
-Then run the virtual-environment and installation commands shown above.
-
-On Windows PowerShell, activate the virtual environment with:
-
-```powershell
+``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-All remaining commands can be run from the repository root.
+## Quick start
 
-## Word document structure
+Put a Word scenario in the `input/` folder and run:
 
-The converter interprets the document as follows:
-
-| Word content | Purpose |
-|---|---|
-| Heading 1 | Story title |
-| Heading 2 | Twine passage or node |
-| Normal body text | Passage content |
-| Heading 3–6 | Subheadings inside the current passage |
-
-Use one Heading 1 at the start of the document and a Heading 2 for every passage.
-
-### Example
-
-```text
-Literature Review Scenario                 [Heading 1]
-
-Start                                      [Heading 2]
-You are beginning a literature review.
-
-[[Define the question->Focused Question]]
-[[Start searching->Search Too Soon]]
-
-Focused Question                           [Heading 2]
-You clarify the question before searching.
-
-[[Develop a search strategy->Search Strategy]]
+``` bash
+python word_to_twine.py input/demo_branching_scenario.docx --output-dir output
 ```
 
-The target name in each link must exactly match a Heading 2 passage title.
+The converter should create:
 
-## Twine links
-
-The following link formats are supported:
-
-```text
-[[Choice text->Target Passage]]
-[[Target Passage]]
+``` text
+output/demo_branching_scenario.twee
+output/demo_branching_scenario.html
 ```
 
-For a labelled choice, the text before `->` is shown to the learner and the text after it identifies the destination passage.
+Open the generated HTML on macOS:
 
-## Media embeds
-
-Place a media marker on its own line in the body of a passage.
-
-### YouTube
-
-```text
-YouTubeEmbed :: https://www.youtube.com/watch?v=VIDEO_ID
+``` bash
+open output/demo_branching_scenario.html
 ```
 
-YouTube watch and `youtu.be` links are converted to embeddable URLs.
+On Windows, open the HTML file normally in a browser.
 
-### Panopto
+To generate only Twee:
 
-```text
-PanoptoEmbed :: https://example.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=VIDEO_ID
+``` bash
+python word_to_twine.py input/demo_branching_scenario.docx --output-dir output --twee-only
 ```
 
-The converter changes the Panopto viewer URL to its corresponding embed URL.
+## Basic Word structure
 
-### Iframe
+The simplest scenario requires very little syntax.
 
-```text
-IFrameEmbed :: https://example.com/embed/
+  Word content/style     Purpose
+  ---------------------- ---------------------------
+  Heading 1              Scenario title
+  Heading 2              New passage/screen
+  Heading 3              Subheading
+  Normal                 Learner-facing text
+  Scenario Choice        Single branching choice
+  Scenario MultiChoice   Multiple-selection option
+  Scenario Set           Remember a value
+  Scenario Add           Change a score/resource
+  Scenario Feedback      Store feedback
+
+Example:
+
+``` text
+Heading 1: Data Sharing Decision
+
+Heading 2: The Request
+
+A collaborator asks for access to a dataset.
+
+[Scenario Choice]
+Review the documentation -> Review the Evidence
+
+[Scenario Choice]
+Approve immediately -> Immediate Approval
+
+Heading 2: Review the Evidence
+
+The documentation requires a governance review.
+
+[Scenario Set]
+evidenceReviewed=true
+
+[Scenario Choice]
+Continue -> Final Decision
 ```
 
-Only embed content from sources you trust and verify that the site permits iframe embedding.
+For the full syntax and advanced features, see **[the authoring
+manual](docs/AUTHORING.md)**.
 
-### Image
+## Advanced scenario logic
 
-```text
-ImageEmbed :: images/example.png
+The converter can support richer simulations where required.
+
+Example conditional content:
+
+``` text
+If :: evidenceReviewed
+You can make an informed decision.
+Else
+You have not yet reviewed the evidence.
+EndIf
 ```
 
-The image path is retained in the generated Twee source. Ensure the referenced image is available at the same relative location when the story is compiled and published. Generated image tags currently use an empty `alt` attribute, so add appropriate alternative text during the final accessibility review when the image conveys meaning.
+Readable conditions are supported:
 
-## Run the demonstration
-
-From the repository root:
-
-```bash
-python3 word_to_twine.py \
-  --input literature_review_twine_demo.docx \
-  --output output/twine/literature_review_twine_demo.twee
+``` text
+If :: consentChecked AND riskAssessed
+...
+EndIf
 ```
 
-Expected confirmation:
+Example calculation:
 
-```text
-Created: output/twine/literature_review_twine_demo.twee
+``` text
+Calculate :: efficiency = 15 - ceil(max(0,time-48)/4)
 ```
 
-If `--output` is omitted, the converter uses `output/twine/` by default:
+Example conditional outcome:
 
-```bash
-python3 word_to_twine.py \
-  --input literature_review_twine_demo.docx
+``` text
+Outcome :: Strong outcome | when=consulted AND riskAssessed
+Outcome :: Unresolved outcome | default
 ```
 
-## Open the generated story in Twine
+These features are optional. A basic branching scenario does not require
+variables, scoring, calculations, or outcomes.
 
-Twine is a free, open-source application available as a desktop download and as a browser-based application:
+## Using Twine
 
-- [Download or open Twine](https://twinery.org/)
-- [Download Tweego](https://www.motoslave.net/tweego/)
+Twine is not required for the normal build process because
+`word_to_twine.py` generates standalone HTML directly.
 
-The converter creates a `.twee` source file. Twine does not directly import raw `.twee` files, so first compile the file into a Twine story HTML file with Tweego.
+Twine can still be useful for:
 
-### 1. Compile the `.twee` file
+-   visualising the passage/story map;
+-   inspecting branches;
+-   identifying dead ends;
+-   reviewing complex navigation;
+-   debugging a scenario.
 
-After installing Tweego, run the following command from the repository root:
+The recommended rule is:
 
-```bash
-tweego \
-  -o output/twine/literature_review_twine_demo.html \
-  output/twine/literature_review_twine_demo.twee
+> **Word is the source of truth.**
+
+If Twine reveals a problem, make the correction in Word and regenerate
+the outputs. Editing only in Twine creates a separate version that is
+not automatically written back to the Word source.
+
+## Output files
+
+For:
+
+``` text
+input/my_scenario.docx
 ```
 
-This creates:
+running:
 
-```text
-output/twine/literature_review_twine_demo.html
+``` bash
+python word_to_twine.py input/my_scenario.docx --output-dir output
 ```
 
-You can open this HTML file directly in a web browser to test the story.
+creates:
 
-### 2. Import the compiled story into Twine
-
-1. Open the Twine desktop application or the browser-based version of Twine.
-2. Go to the story library.
-3. Choose **Import From File**.
-4. Select `output/twine/literature_review_twine_demo.html`.
-5. Open the imported story to inspect or edit its passages.
-6. Use **Build → Publish to File** when you are ready to export the finished story.
-
-The exact menu wording can vary slightly between Twine versions, but the workflow is the same: compile `.twee` to `.html` with Tweego, then import the compiled HTML into Twine.
-
-## Convert another Word document
-
-```bash
-python3 word_to_twine.py \
-  --input path/to/scenario.docx \
-  --output output/twine/scenario.twee
+``` text
+output/my_scenario.twee
+output/my_scenario.html
 ```
 
-## Convert multiple documents
+The `.html` file is the normal learner-facing deliverable.
 
-Use `--input-glob` to process multiple `.docx` files:
+The `.twee` file is useful for portability, version control, inspection,
+and Twine/Twee workflows.
 
-```bash
-python3 word_to_twine.py \
-  --input-glob "examples/**/*.docx" \
-  --output-dir output/twine
-```
+## Validation
 
-Keep the glob pattern in quotation marks so the converter receives it unchanged.
+Before generating outputs, the converter checks scenario structure,
+including:
 
-## Prevent overwriting
+-   duplicate Heading 2 passage names;
+-   whether the start passage exists;
+-   broken Twine-style links;
+-   broken `Choice` / `MultiChoice` targets.
 
-By default, an existing output file is replaced. To stop instead of overwriting it:
-
-```bash
-python3 word_to_twine.py \
-  --input literature_review_twine_demo.docx \
-  --output output/twine/literature_review_twine_demo.twee \
-  --no-overwrite
-```
-
-## Command-line options
-
-| Option | Description |
-|---|---|
-| `--input PATH` | Convert one `.docx` file |
-| `--input-glob PATTERN` | Convert multiple matching `.docx` files |
-| `--output PATH` | Set the `.twee` output path for one input file |
-| `--output-dir PATH` | Set the output directory; default: `output/twine` |
-| `--no-overwrite` | Refuse to overwrite an existing output file |
-| `-h`, `--help` | Display command help |
-
-`--input` and `--input-glob` are mutually exclusive, and one of them is required.
-
-## Link validation
-
-After conversion, the script compares every Twine link target with the available passage titles. A missing target produces a warning such as:
-
-```text
-Warnings:
-  - Link points to missing passage: [[Continue->Missing Passage]]
-```
-
-The output file is still created, allowing the source document to be corrected and converted again.
+A validation failure is reported in the terminal so the Word source can
+be corrected and regenerated.
 
 ## Troubleshooting
 
-### `python3: command not found`
+### `FileNotFoundError`
 
-Install Python 3 and reopen Terminal.
+The input filename or path is wrong. Check the contents of the input
+folder:
 
-### `Missing dependency: mammoth`
-
-Activate the virtual environment and install Mammoth:
-
-```bash
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
+``` bash
+ls input
 ```
 
-### `No headings found`
+Then use the exact filename:
 
-Apply Word's built-in **Heading 1** style to the story title and **Heading 2** to every passage title. Making text bold or increasing its font size is not sufficient.
+``` bash
+python word_to_twine.py input/my_scenario.docx --output-dir output
+```
 
-### `No Heading 2 passages found`
+### Broken choice target
 
-The document contains a title but no passages. Apply the **Heading 2** style to each passage or node title.
+The text after `->` must exactly match a Heading 2 passage title.
 
-### Missing-passage warnings
+### Conditional error
 
-Check spelling, spacing and capitalisation. Each link target must match its destination Heading 2 title exactly.
+Check that every:
 
-### Twine will not import the `.twee` file
+``` text
+If ::
+```
 
-Compile the `.twee` file to `.html` with Tweego, then use Twine's **Import From File** option to import the resulting HTML file.
+has a corresponding:
 
-### `tweego: command not found`
+``` text
+EndIf
+```
 
-Confirm that Tweego has been downloaded and that its executable is available on your system's `PATH`. Alternatively, run Tweego using the full path to the downloaded executable.
+### Unexpected outcome
 
-## Accessibility and quality assurance
+The scenario is stateful. An earlier `Scenario Set`, `Scenario Add`, or
+choice may have triggered the outcome. Review the state changes and
+outcome order.
 
-Review the compiled story before publication. In particular:
+## Accessibility and QA
 
-- test every choice and return path;
-- check keyboard navigation in the selected Twine story format;
-- add meaningful alternative text for informative images;
-- confirm that videos include captions or transcripts;
-- provide descriptive link and choice text;
-- verify colour contrast and responsive behaviour;
-- check that embedded services are permitted by local privacy, security and content policies.
+The generated scenario should still be tested before publication.
 
-## Limitations
+Recommended checks include:
 
-- the output is Twee source rather than a standalone HTML file;
-- Word formatting is simplified during conversion;
-- only Heading 1 and Heading 2 have structural story roles;
-- embedded images are referenced rather than copied;
-- custom Twine story-format features are not added automatically;
-- broken links are reported as warnings rather than stopping conversion.
+-   keyboard navigation;
+-   screen-reader behaviour;
+-   heading structure;
+-   descriptive choice text;
+-   colour contrast;
+-   responsive/mobile layout;
+-   meaningful alternative text for informative images;
+-   captions/transcripts for media;
+-   every important branching route;
+-   restart/save behaviour where used.
+
+Accessibility and responsive behaviour should be provided by the shared
+converter/runtime wherever possible rather than being reimplemented by
+each author.
+
+## Recommended roles
+
+**Academic / subject expert:** content, decisions, feedback, pedagogical
+consequences.
+
+**Learning technologist:** branching design, state, conditions, scoring,
+gates, calculations, QA.
+
+**Developer / platform owner:** converter, SugarCube runtime, styling,
+accessibility defaults, validation.
+
+## Source of truth and generated files
+
+Treat Word documents as maintained source files.
+
+Treat `.twee` and `.html` as generated outputs that can be recreated
+from Word.
+
+This avoids divergence between a Word version, a Twine version, and
+manually edited HTML.
 
 ## Licence
 
-Add the repository's licence here. If the project is released under the MIT Licence, include a `LICENSE` file in the repository.
+Add the repository licence in `LICENSE`. If the project is released
+under the MIT Licence, include the standard MIT licence text there.
