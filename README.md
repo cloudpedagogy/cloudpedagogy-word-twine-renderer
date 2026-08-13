@@ -362,5 +362,4 @@ manually edited HTML.
 
 ## Licence
 
-Add the repository licence in `LICENSE`. If the project is released
-under the MIT Licence, include the standard MIT licence text there.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
