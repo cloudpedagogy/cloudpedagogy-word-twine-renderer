@@ -51,7 +51,7 @@ being locked into one-off HTML applications.
 
 ## Authoring manual
 
-See **[AUTHORING.md](docs/AUTHORING.md)** for the complete authoring
+See **[AUTHORING.md](AUTHORING.md)** for the complete authoring
 guide, including basic branching, Word styles, state, conditions,
 scoring, gates, calculations, outcomes, QA, and the recommended Twine
 workflow.
@@ -120,23 +120,23 @@ On Windows PowerShell:
 
 ## Quick start
 
-Put a Word scenario in the `input/` folder and run:
+Run the converter on the provided demo scenario:
 
 ``` bash
-python word_to_twine.py input/demo_branching_scenario.docx --output-dir output
+python word_to_twine.py demo/research_data_incident_scenario.docx --output-dir output
 ```
 
-The converter should create:
+The converter creates:
 
 ``` text
-output/demo_branching_scenario.twee
-output/demo_branching_scenario.html
+output/research_data_incident_scenario.twee
+output/research_data_incident_scenario.html
 ```
 
 Open the generated HTML on macOS:
 
 ``` bash
-open output/demo_branching_scenario.html
+open output/research_data_incident_scenario.html
 ```
 
 On Windows, open the HTML file normally in a browser.
@@ -144,7 +144,15 @@ On Windows, open the HTML file normally in a browser.
 To generate only Twee:
 
 ``` bash
-python word_to_twine.py input/demo_branching_scenario.docx --output-dir output --twee-only
+python word_to_twine.py demo/research_data_incident_scenario.docx --output-dir output --twee-only
+```
+
+## Running tests
+
+Run the regression test suite using Python's built-in `unittest`:
+
+``` bash
+python3 -m unittest discover -s tests -p "test_*.py" -v
 ```
 
 ## Basic Word structure
@@ -190,7 +198,7 @@ Continue -> Final Decision
 ```
 
 For the full syntax and advanced features, see **[the authoring
-manual](docs/AUTHORING.md)**.
+manual](AUTHORING.md)**.
 
 ## Advanced scenario logic
 

@@ -721,26 +721,40 @@ def validate(story: Story) -> List[str]:
     return errors
 
 
-def main():
-    ap=argparse.ArgumentParser(description="Convert styled or directive-based Word scenarios to Twee and standalone SugarCube HTML.")
+def main(argv: Optional[List[str]] = None) -> int:
+    ap = argparse.ArgumentParser(description="Convert styled or directive-based Word scenarios to Twee and standalone SugarCube HTML.")
     ap.add_argument("input", type=Path)
     ap.add_argument("--output-dir", type=Path, default=Path("output"))
     ap.add_argument("--twee-only", action="store_true")
-    args=ap.parse_args()
-    story=load_docx(args.input)
-    errors=validate(story)
+    args = ap.parse_args(argv)
+
+    if not args.input.exists():
+        print(f"Error: Input file '{args.input}' not found.", file=sys.stderr)
+        return 1
+    if args.input.suffix.lower() != ".docx":
+        print(f"Error: Input file '{args.input}' must be a .docx file.", file=sys.stderr)
+        return 1
+
+    try:
+        story = load_docx(args.input)
+    except Exception as e:
+        print(f"Error loading document: {e}", file=sys.stderr)
+        return 1
+
+    errors = validate(story)
     if errors:
         print("Validation failed:", file=sys.stderr)
-        for e in errors: print(" -",e,file=sys.stderr)
+        for e in errors:
+            print(" -", e, file=sys.stderr)
         return 2
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    stem=args.input.stem
-    twee_path=args.output_dir/(stem+".twee")
+    stem = args.input.stem
+    twee_path = args.output_dir / (stem + ".twee")
     twee_path.write_text(story_to_twee(story), encoding="utf-8")
     print(f"Wrote {twee_path}")
     if not args.twee_only:
-        html_path=args.output_dir/(stem+".html")
-        html_path.write_text(compile_html(story),encoding="utf-8")
+        html_path = args.output_dir / (stem + ".html")
+        html_path.write_text(compile_html(story), encoding="utf-8")
         print(f"Wrote {html_path}")
     return 0
 
